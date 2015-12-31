@@ -37,8 +37,7 @@ except ImportError as message:
     import_ok = False
 
 def fetch_vars():
-    #webpage = 'http://icecast.nashgul.com.es/status-json.xsl'
-    webpage = weechat.config_string('icecast.config.icecast_json_url')
+    webpage = config_values['url']
     return webpage
 
 def icecast_cmd_cb(data_ptr, buffer_exec, args):
@@ -50,14 +49,18 @@ def icecast_cmd_cb(data_ptr, buffer_exec, args):
         radio_online = False
     if radio_online:
         status_dict = loads(status_page.read())
+        global streams_list
         streams_list = status_dict['server']['streams']
         if streams_list:
             # mounts available
-            pass
+            show_stats()
         else:
             # no mounts available
             pass
     return weechat.WEECHAT_RC_OK
+
+def show_stats():
+    pass
 
 def initialize_config(name):
     global config
@@ -68,12 +71,32 @@ def initialize_config(name):
         return
     section = weechat.config_new_section(config_file, 'config', 0,0, '', '', '', '', '', '', '', '', '', '')
     config['url'] = weechat.config_new_option(config_file, section,
-            'icecast_json_url', 'string', 'http directory for /status-json.xsl', '', 0, 0, '', '', 1,
-            '', '', 'load_vars_cb', '', '', '')
+            'icecast_json_url', 'string', 'http directory for /status-json.xsl',
+            '', 0, 0, '', '', 1,
+            '', '',
+            'load_vars_cb', '',
+            '', '')
+    config['streams'] = weechat.config_new_option(config_file, section,
+            'streams', 'string', 'mounts to show (without slash and separated by commas)',
+            '', 0, 0, '', '', 1,
+            'check_mounts_cb', '',
+            'load_vars_cb', '',
+            '', '')
 
-def load_vars_cb():
+def check_mounts_cb(data_ptr, option_ptr, new_value):
+    if ',' in new_value:
+        mounts = new_value.split(',')
+        for mount in mounts:
+            if mount.startswith('/') or mount.endswith('/'):
+                return 0
+        return 1
+
+def load_vars_cb(data_ptr, option_ptr):
     global config_values
     config_values = {}
+    for key, pointer in config.items():
+        config_values[key] = weechat.config_string(pointer)
+    return weechat.WEECHAT_RC_OK
 
 def my_config_reload_cb():
     return weechat.config_reload(config_file)
