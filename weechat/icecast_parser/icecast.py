@@ -10,7 +10,6 @@
 import sys
 reload(sys)
 sys.setdefaultencoding("utf8")
-    
 
 SCRIPT_NAME = 'icecast'
 SCRIPT_AUTHOR = 'nashgul'
@@ -21,7 +20,6 @@ SCRIPT_COMMAND = 'ice'
 SCRIPT_DESC = 'icecast stats parser (usage: /%s)' % SCRIPT_NAME
 
 import_ok = True
-
 try:
     import weechat
 except:
@@ -32,7 +30,6 @@ except:
 try:
     from urllib2 import urlopen
     from json import loads
-
 except ImportError as message:
     print 'Missing package(s) for %s: %s' % (SCRIPT_NAME, message)
     import_ok = False
