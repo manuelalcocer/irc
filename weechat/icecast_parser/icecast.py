@@ -30,6 +30,7 @@ except:
 try:
     from urllib2 import urlopen
     from json import loads
+    import time
 except ImportError as message:
     print 'Missing package(s) for %s: %s' % (SCRIPT_NAME, message)
     import_ok = False
@@ -162,12 +163,4 @@ if __name__ == '__main__' and import_ok:
     config_read()
     # add icecast stats parser command
     weechat.hook_command(
-            SCRIPT_COMMAND,
-            SCRIPT_DESC,
-            '',
-            '',
-            '',
-            'icecast_cmd_cb',
-            '')
-
-
+            SCRIPT_COMMAND, SCRIPT_DESC, '', '', '', 'icecast_cmd_cb', '')
