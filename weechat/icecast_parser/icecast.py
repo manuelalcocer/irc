@@ -5,7 +5,6 @@
 # freenode: #debian-es-offtopic, #birras
 
 
-
 # Compatibility with non-ascii chars on weechat
 import sys
 reload(sys)
@@ -153,15 +152,19 @@ def show_stats(buffer_exec, streams_dict):
             # shows stats only for streams added to config['streams']
             info = create_string(mount)
             weechat.command(buffer_exec, '/me %s' % info)
-#
+
 def create_string(mount):
     string = config_values['format']
     for color in colors:
         color_index = colors.index(color)
         color = '%' + color
-        color_replace = 'u\'\\x03%d\'' % color_index
+        color_replace = u'\x03%d' % color_index
         string = string.replace(color, color_replace)
-#    string = string.replace('%normal', )
+    values = []
+    for value in config_values['stream_options'].split(','):
+        values += [streams_dict.get(mount)[value]]
+    values = tuple(values)
+    string = string % values
     return string
 
 if __name__ == '__main__' and import_ok:
