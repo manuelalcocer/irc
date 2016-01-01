@@ -16,7 +16,7 @@ SCRIPT_VERSION = '0.1'
 SCRIPT_LICENSE = 'GPL2'
 
 SCRIPT_COMMAND = 'ice'
-SCRIPT_DESC = 'icecast stats parser (usage: /%s)' % SCRIPT_NAME
+SCRIPT_DESC = 'icecast stats parser (usage: /%s)' % SCRIPT_COMMAND
 
 import_ok = True
 try:
@@ -43,8 +43,8 @@ def initialize_config(name):
     config_values = {}
     global config_keys
     config_keys = {
-            'strings' : ['url', 'streams', 'stream_options', 'format'],
-            'integers' : ['time_delay']
+            'strings' : ['url', 'streams', 'stream_options', 'format']
+            #'integers' : ['time_delay']
             }
     # Available colors
     global colors
@@ -57,35 +57,31 @@ def initialize_config(name):
     section = weechat.config_new_section(config_file, 'config', 0,0, '', '', '', '', '', '', '', '', '', '')
     config['url'] = weechat.config_new_option(config_file, section,
             'icecast_json_url', 'string', 'http directory for /status-json.xsl',
-            '', 0, 0, '', '', 1,
+            '', 0, 0,
+            'http://icecast.nashgul.com.es/status-json.xsl', 'http://icecast.nashgul.com.es/status-json.xsl', 1,
             '', '',
             'load_str_vars_cb', '',
             '', '')
     config['streams'] = weechat.config_new_option(config_file, section,
             'streams', 'string', 'mounts to show (without slash and separated by commas)',
-            '', 0, 0, '', '', 1,
+            '', 0, 0,
+            'nashgul', 'nashgul', 1,
             'check_mounts_cb', '',
             'load_str_vars_cb', '',
             '', '')
     config['stream_options'] = weechat.config_new_option(config_file, section,
             'stream_options', 'string', 'stream options to show',
             '', 0, 0,
-            'artist,title,listeners', 'artist,title,listeners', 1,
+            'url,artist,title,listeners', 'url,artist,title,listeners', 1,
             '', '',
             'load_str_vars_cb', '',
             '', '')
     config['format'] = weechat.config_new_option(config_file, section,
-            'output_format', 'string', 'Output string format (%s: attribute, %\'color\'; i.e.: %normalNow playing on %red%s%normal: %blue%s - %s - %s)',
+            'output_format', 'string', 'Output string format (%s: attribute, %\'color\'; i.e.: Now playing on %red%s: %blue%s - %s - %s)',
             '', 0, 0,
-            'Now playing on %s: %s - %s - %s', 'Now playing on %s: %s - %s - %s', 1,
+            '%redAhora suena en %cyan%s%yellow: %lightblue%s %yellow- %lightblue%s %yellow( %magentaOyentes%yellow: %lightblue%s %yellow)', '%lightredAhora suena en %cyan%s%yellow: %lightblue%s %yellow- %lightblue%s %yellow( %magentaOyentes%yellow: %lightblue%s %yellow)', 1,
             '', '',
             'load_str_vars_cb', '',
-            '', '')
-    config['time_delay'] = weechat.config_new_option(config_file, section,
-            'time_delay', 'integer', 'time delay between info show when streams > 1',
-            '', 0, 0, '', '', 1,
-            '', '',
-            'load_int_vars_cb', '',
             '', '')
 
 def check_mounts_cb(data_ptr, option_ptr, new_value):
