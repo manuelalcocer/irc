@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # icecast stats parser for weechat - ver 0.1
 #
-# nashgul <m.alcocer1978@gmail.com>
+# nashgul <m.alcocer1978@gmail.com>   :-D
 # freenode: #debian-es-offtopic, #birras
 
 
@@ -38,22 +38,23 @@ except ImportError as message:
 def initialize_config(name):
     global config
     config = {}
-
     global config_file
     config_file = weechat.config_new(name, 'my_config_reload_cb', '')
-
     global config_values
     config_values = {}
-
     global config_keys
     config_keys = {
-            'strings' : ['url', 'streams', 'stream_options'],
+            'strings' : ['url', 'streams', 'stream_options', 'format'],
             'integers' : ['time_delay']
             }
+    # Available colors
+    global colors
+    colors = ['white' , 'black', 'blue', 'green', 'lighred', 'red',
+            'magenta', 'brown', 'yellow', 'lightgreen', 'cyan',
+            'lightcyan', 'lightblue', 'lightmagenta', 'darkgray', 'gray']
 
     if not config_file:
         return
-
     section = weechat.config_new_section(config_file, 'config', 0,0, '', '', '', '', '', '', '', '', '', '')
     config['url'] = weechat.config_new_option(config_file, section,
             'icecast_json_url', 'string', 'http directory for /status-json.xsl',
@@ -74,6 +75,13 @@ def initialize_config(name):
             '', '',
             'load_str_vars_cb', '',
             '', '')
+    config['format'] = weechat.config_new_option(config_file, section,
+            'output_format', 'string', 'Output string format (%s: attribute, %\'color\'; i.e.: %normalNow playing on %red%s%normal: %blue%s - %s - %s)',
+            '', 0, 0,
+            'Now playing on %s: %s - %s - %s', 'Now playing on %s: %s - %s - %s', 1,
+            '', '',
+            'load_str_vars_cb', '',
+            '', '')
     config['time_delay'] = weechat.config_new_option(config_file, section,
             'time_delay', 'integer', 'time delay between info show when streams > 1',
             '', 0, 0, '', '', 1,
@@ -86,13 +94,11 @@ def check_mounts_cb(data_ptr, option_ptr, new_value):
     if len(new_value.split()) > 1:
         # error if mounts contain space
         return 0
-
     # prepares to check individually
     if ',' in new_value:
         mounts = new_value.split(',')
     else:
         mounts = new_value
-    
     # checks mounts individually
     for mount in mounts:
         if mount.startswith('/') or mount.endswith('/'):
@@ -144,21 +150,22 @@ def icecast_cmd_cb(data_ptr, buffer_exec, args):
 def show_stats(buffer_exec, streams_dict):
     for mount in streams_dict.keys():
         if mount.lstrip('/') in config_values['streams']:
+            # shows stats only for streams added to config['streams']
             info = create_string(mount)
-            weechat.command(buffer_exec, '/print %s' % info)
-
+            weechat.command(buffer_exec, '/me %s' % info)
+#
 def create_string(mount):
-    counter = 0
-    for option in config_values['stream_options'].split(','):
-        if counter != 0:
-            string = string + ' - ' + streams_dict.get(mount)[option]
-        else:
-            string = streams_dict.get(mount)[option]
-        counter += 1
+    string = config_values['format']
+    for color in colors:
+        color_index = colors.index(color)
+        color = '%' + color
+        color_replace = 'u\'\\x03%d\'' % color_index
+        string = string.replace(color, color_replace)
+#    string = string.replace('%normal', )
     return string
 
 if __name__ == '__main__' and import_ok:
-    weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCRIPT_LICENSE, '', '')
+    weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCRIPT_DESC, '', '')
     initialize_config(SCRIPT_NAME)
     config_read()
     # add icecast stats parser command
