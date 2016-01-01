@@ -29,7 +29,6 @@ except:
 try:
     from urllib2 import urlopen
     from json import loads
-    import time
 except ImportError as message:
     print 'Missing package(s) for %s: %s' % (SCRIPT_NAME, message)
     import_ok = False
@@ -87,7 +86,7 @@ def initialize_config(name):
 def check_mounts_cb(data_ptr, option_ptr, new_value):
     # checks if mount list contains spaces
     if len(new_value.split()) > 1:
-        # error if mounts contain space
+        # error if mounts contain spaces
         return 0
     # prepares to check individually
     if ',' in new_value:
@@ -131,16 +130,20 @@ def icecast_cmd_cb(data_ptr, buffer_exec, args):
         radio_online = False
     if radio_online:
         status_dict = loads(status_page.read())
-        global streams_dict
-        streams_dict = status_dict['server']['streams'].copy()
+        create_dict(status_dict)
         if len(streams_dict) >= 1:
             # mounts available
+            scroll_stats()
             show_stats(buffer_exec, streams_dict)
         else:
             # no mounts available
             no_mounts_message = 'No hay radios disponibles'
             weechat.command(buffer_exec, '/print %s' % no_mounts_message)
     return weechat.WEECHAT_RC_OK
+
+def create_dict(status_dict):
+    global streams_dict
+    streams_dict = status_dict['server']['streams'].copy()
 
 def show_stats(buffer_exec, streams_dict):
     for mount in streams_dict.keys():
@@ -163,10 +166,24 @@ def create_string(mount):
     string = string % values
     return string
 
+def scroll_stats():
+    if timer_ptr:
+        stop_timer()
+    window_size = weechat.window_get_integer(weechat.current_window(), 'win_width')
+    string = ''
+    for key in streams_dict.keys():
+        string += key.decode('utf-8').lstrip('/') + ' => '
+        for subkey, value in streams_dict[key].items():
+            string += '%s: %s, ' % (subkey.decode('utf-8'), value.decode('utf-8'))
+
+def stop_timer():
+    weechat.unhook(timer_ptr)
+
 if __name__ == '__main__' and import_ok:
     weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCRIPT_DESC, '', '')
     initialize_config(SCRIPT_NAME)
     config_read()
+    global timer_ptr
+    timer_ptr = False
     # add icecast stats parser command
-    weechat.hook_command(
-            SCRIPT_COMMAND, SCRIPT_DESC, '', '', '', 'icecast_cmd_cb', '')
+    weechat.hook_command(SCRIPT_COMMAND, SCRIPT_DESC, '', '', '', 'icecast_cmd_cb', '')
